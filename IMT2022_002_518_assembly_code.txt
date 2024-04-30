@@ -1,0 +1,86 @@
+#asm code
+.data
+plaintext: .asciiz "Enter Plain text: "
+ciphertext: .asciiz "Cipher text: "
+deciphertext: .asciiz "Deciphered text: "
+data: .space 40
+Key: .asciiz "mykey002"  #added key as my rollno
+
+.text
+main:
+    li $t3, 0 # 0 for encryption, 1 for decryption (change as needed)
+    la $a0, plaintext
+    li $v0, 4
+    syscall
+
+    # Read the input
+    la $a0, data
+    la $a1, 40   # Maximum 40 characters can be read
+    li $v0, 8
+    syscall
+
+    # Load the fixed key
+    la $t4, Key
+
+    # Encryption or Decryption Loop
+    li $t0, 0      # Initialize loop counter
+
+encrypt_decrypt_loop:
+    lb $t2, 0($a0)   # Load a character from the input
+    beqz $t2, end_encrypt_decrypt  # Terminate when the end of the string is reached
+
+    # Encryption or Decryption
+    lb $t1, 0($t4)   # Load a character from the key
+    xor $t2, $t2, $t1   # XOR the character with the key
+
+    sb $t2, 0($a0)   # Store the character (encrypted or decrypted) back
+    addi $a0, $a0, 1   # Move to the next character
+    addi $t4, $t4, 1   # Move to the next character in the key
+    j encrypt_decrypt_loop
+
+end_encrypt_decrypt:
+    # Display the result (encrypted or decrypted text)
+    la $a0, ciphertext
+    li $v0, 4
+    syscall
+
+    # Print the result (encrypted or decrypted text)
+    la $a0, data
+    li $v0, 4
+    syscall
+
+    # Reset the key pointer for decryption
+    la $t4, Key
+    li $t3, 1  # Set the mode to decryption
+
+    # Decryption Loop
+    la $a0, data
+    j decrypt_data_loop
+
+decrypt_data_loop:
+    lb $t2, 0($a0)   # Load a character from the data buffer
+    beqz $t2, end_decryption  # Terminate when the end of the string is reached
+
+    # Decryption
+    lb $t1, 0($t4)   # Load a character from the key
+    xor $t2, $t2, $t1   # XOR the character with the key
+
+    sb $t2, 0($a0)   # Store the character (decrypted) back
+    addi $a0, $a0, 1   # Move to the next character
+    addi $t4, $t4, 1   # Move to the next character in the key
+    j decrypt_data_loop
+
+end_decryption:
+    # Display the result (decrypted text)
+    la $a0, deciphertext
+    li $v0, 4
+    syscall
+
+    # Print the result (decrypted text)
+    la $a0, data
+    li $v0, 4
+    syscall
+
+    # Terminate program
+    li $v0, 10
+    syscall
